@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <cstddef>
 #include <sys/time.h>
 #include <ctype.h>
 #include <linux/limits.h>
@@ -156,7 +155,7 @@ static int restart(int pid){
         printf("Restarted process : path_to_binary : %s || Arguments the process took : %s || Environment variables : %s ", resolved_path, *args, *env);
 
     }
-    
+
     return 0;
 }
 
