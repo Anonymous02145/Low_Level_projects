@@ -215,8 +215,8 @@ int main() {
 
             printf("Restarting process (PID : %d)", id);
             if (kill(id, 0) == 0) {
-                if (syscall(SYS_kill, id, SIGKILL) == 0) {
-                    printf("\n");
+                if (restart(id) == 0) {
+                    printf("Restarted");
                 }
             
             }
