@@ -133,6 +133,8 @@ int main() {
         return 1;
     }
 
+    //Kill :
+
     if(strcmp(action, "k") == 0 || strcmp(action, "kill") == 0 || strcmp(action, "Kill")) {
         if(is_number(proc_id)){
 
@@ -166,6 +168,8 @@ int main() {
         
     }
     
+    //Abort :
+
     if(strcmp(action, "a") == 0 || strcmp(action, "abort") == 0 || strcmp(action, "Abort") == 0){
         if(is_number(proc_id)){
             int id = atoi(proc_id);
@@ -201,6 +205,8 @@ int main() {
         }
     }
     
+    //Restart :
+
     if (strcmp(action, "r") == 0 || strcmp(action, "restart") == 0 || strcmp(action, "Restart") == 0) {
         if (is_number(proc_id) == 0) {
             int id = atoi(proc_id);

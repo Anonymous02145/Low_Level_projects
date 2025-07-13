@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <cstddef>
 #include <sys/time.h>
 #include <ctype.h>
 #include <linux/limits.h>
@@ -60,6 +61,69 @@ static pid_t getpidbyname(const char *target_name){
 static int restart(int pid){
     char exepath[PATH_MAX];
     char resolved_path[PATH_MAX];
+    char cmdline[64];
+    snprintf(cmdline, sizeof(cmdline), "/proc/%d/cmdline", pid);
+
+    FILE *cmd_file = fopen(cmdline,"r");
+    if(!cmd_file){
+        perror("Failed to read the command to execute the binary !");
+        return -1;
+    }
+
+    if (strstr(resolved_path, " (deleted)")) {
+        char *del = strstr(resolved_path, " (deleted)");
+        if (del) *del = '\0';
+    }
+
+    char *args[256] = {0};
+    char argsbuf[4096];
+    size_t total = fread(argsbuf, 1, sizeof(argsbuf) - 1, cmd_file);
+    fclose(cmd_file);
+    if (total <= 0) {
+        perror("Cmd File empty");
+        return -1;
+    }
+    int i = 0;
+    for (size_t j = 0; j < total && i < 255 ; j++) {
+        args[i++] = &argsbuf[j];
+        while (j < total && argsbuf[j] != '\0') {
+            j++;
+        }
+    
+    }
+
+    // contains the arguments : 
+    args[i] = NULL;
+
+    char environ_path[64];
+    snprintf(environ_path, sizeof(environ_path), "/proc/%d/environ", pid);
+
+    FILE *envi = fopen(environ_path, "r");
+    if (!envi) {
+        perror("Failed to read environment variables");
+        return -1;
+    }
+
+    char *env[256] = {0};
+    char envbuf[8192];
+    total = fread(envbuf, 1, sizeof(envbuf), envi);
+    fclose(envi);
+    if (total <= 0) {
+        perror("Environment variables empty");
+        return -1;
+    }
+
+    i = 0;
+    for (size_t j = 0; j < total && i < 255; j++) {
+        env[i++] = &envbuf[j++];
+        while (j < total && envbuf[j] != '\0') {
+            j++;
+        
+        }
+    }
+
+    // contains the environment variables: 
+    env[i] = NULL;
 
     snprintf(exepath, sizeof(exepath), "/proc/%d/exe", pid);
 
@@ -70,6 +134,7 @@ static int restart(int pid){
         return -1;
     }
 
+    //has the path to executable binary :
     resolved_path[len] = '\0';
 
     if (kill(pid, 0) == 0) {
@@ -77,12 +142,22 @@ static int restart(int pid){
             perror("failed to kill process");
             return -1;
         }
+        else{
+            printf("\n");
+        }
     }
     else {
         printf("Permission not aquired");
     }
 
     sleep(1);
+
+    if (syscall(SYS_execve, resolved_path, args, env) == 0) {
+        printf("Restarted process : path_to_binary : %s || Arguments the process took : %s || Environment variables : %s ", resolved_path, *args, *env);
+
+    }
+    
+    return 0;
 }
 
 #endif 
